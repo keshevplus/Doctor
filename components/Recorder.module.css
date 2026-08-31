@@ -1,0 +1,98 @@
+.center {
+  text-align: center;
+}
+
+.mic {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 2px solid var(--amber);
+  background: transparent;
+  color: var(--amber-strong);
+  font-size: 30px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.mic:hover:not(:disabled) {
+  background: rgba(217, 142, 43, 0.12);
+}
+
+.mic:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.mic:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.micRecording {
+  background: var(--amber);
+  color: #1e1b18;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 142, 43, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(217, 142, 43, 0);
+  }
+}
+
+.status {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 18px;
+}
+
+.timer {
+  color: var(--amber-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.transcript {
+  margin-top: 18px;
+  min-height: 60px;
+  padding: 16px;
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.interim {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.toggle {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.toggle input {
+  accent-color: var(--amber);
+}

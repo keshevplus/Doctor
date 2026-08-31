@@ -1,0 +1,104 @@
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.editing {
+  border-color: var(--amber);
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.text {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.summary {
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--teal);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.audio {
+  width: 100%;
+  margin-bottom: 12px;
+  height: 34px;
+}
+
+.editText {
+  min-height: 90px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+.editTags {
+  margin-bottom: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.confirmLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.exportMenu {
+  position: relative;
+}
+
+.exportDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--panel-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 5;
+  min-width: 90px;
+}
+
+.exportDropdown button {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.exportDropdown button:hover {
+  background: rgba(217, 142, 43, 0.15);
+  color: var(--amber-strong);
+}

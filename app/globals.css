@@ -1,0 +1,246 @@
+/*
+ * Design tokens carried over verbatim from the v1 single-file app: warm
+ * charcoal ground, amber accent, teal secondary, Fraunces for display and IBM
+ * Plex Sans for body. Rounded panels, hairline borders, and no shadows or
+ * gradients used decoratively — depth comes from surface lightness alone.
+ */
+
+:root {
+  --bg: #1e1b18;
+  --panel: #26221e;
+  --panel-raised: #2c2723;
+  --border: rgba(242, 237, 231, 0.1);
+  --border-strong: rgba(242, 237, 231, 0.18);
+
+  --text: #f2ede7;
+  --text-muted: #b8afa6;
+
+  --amber: #d98e2b;
+  --amber-strong: #e6a34c;
+  --teal: #5c8a82;
+  --teal-strong: #74a69d;
+  --danger: #c0604a;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-plex), -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --measure: 760px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--amber-strong);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Visible focus everywhere. Removing outlines makes the app unusable by
+   keyboard, and the amber ring reads clearly against every surface here. */
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+.shell {
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+/* --- Surfaces ----------------------------------------------------------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+
+.banner {
+  background: var(--panel-raised);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+
+.banner-danger {
+  border-left-color: var(--danger);
+}
+
+/* --- Controls ----------------------------------------------------------- */
+
+.btn {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--panel-raised);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1e1b18;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--amber-strong);
+}
+
+.btn-ghost {
+  color: var(--text-muted);
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: rgba(192, 96, 74, 0.4);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(192, 96, 74, 0.12);
+}
+
+input[type='text'],
+input[type='search'],
+input[type='email'],
+textarea {
+  background: var(--panel-raised);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  width: 100%;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--amber);
+}
+
+/* --- Tags --------------------------------------------------------------- */
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: rgba(92, 138, 130, 0.18);
+  color: var(--teal-strong);
+  border: 1px solid rgba(92, 138, 130, 0.35);
+}
+
+.tag-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  cursor: pointer;
+  background: var(--panel-raised);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+.tag-filter-chip[aria-pressed='true'] {
+  background: var(--teal);
+  color: #1e1b18;
+  border-color: var(--teal);
+}
+
+/* --- Utilities ---------------------------------------------------------- */
+
+.muted {
+  color: var(--text-muted);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.section-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 26px 0 10px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
