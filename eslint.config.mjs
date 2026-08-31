@@ -16,6 +16,10 @@ const config = [
   {
     ignores: [
       '.next/**',
+      // Build output: the static export, and the scratch area build-pages.mjs
+      // uses while server-only routes are moved aside.
+      'out/**',
+      '.pages-build-stash/**',
       'node_modules/**',
       'legacy/**',
       'lib/db/migrations/**',

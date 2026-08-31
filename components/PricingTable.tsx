@@ -8,9 +8,14 @@ import styles from './PricingTable.module.css';
 interface PricingTableProps {
   /** Signed-out visitors get a sign-in prompt instead of a checkout redirect. */
   canPurchase: boolean;
+  /**
+   * Where "sign in to buy" points. The static build has no sign-in route of
+   * its own, so it sends people to the full deployment.
+   */
+  signInHref?: string;
 }
 
-export function PricingTable({ canPurchase }: PricingTableProps) {
+export function PricingTable({ canPurchase, signInHref = '/signin' }: PricingTableProps) {
   const [pendingPack, setPendingPack] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +79,7 @@ export function PricingTable({ canPurchase }: PricingTableProps) {
                 {pendingPack === pack.id ? 'Opening checkout…' : 'Buy'}
               </button>
             ) : (
-              <a className="btn btn-primary" href="/signin">
+              <a className="btn btn-primary" href={signInHref}>
                 Sign in to buy
               </a>
             )}

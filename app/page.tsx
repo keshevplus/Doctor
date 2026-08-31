@@ -3,13 +3,17 @@ import { redirect } from 'next/navigation';
 
 import { PricingTable } from '@/components/PricingTable';
 import { auth } from '@/lib/auth';
+import { FULL_APP_URL, IS_STATIC_BUILD } from '@/lib/build-mode';
 import { ACTION_PRICING, SIGNUP_GRANT_CREDITS, SUBSCRIPTION, formatUsd } from '@/lib/credits/pricing';
 import styles from './page.module.css';
 
 export default async function LandingPage() {
-  const session = await auth();
-  // Signed-in visitors have no use for the pitch.
-  if (session?.user) redirect('/record');
+  // The static build has no session to read. On Vercel, signed-in visitors
+  // have no use for the pitch and go straight to the app.
+  if (!IS_STATIC_BUILD) {
+    const session = await auth();
+    if (session?.user) redirect('/record');
+  }
 
   return (
     <div className="shell">
@@ -21,7 +25,9 @@ export default async function LandingPage() {
             somewhere you can actually find it again.
           </p>
           <div className={styles.heroActions}>
-            <Link href="/signin" className="btn btn-primary">
+            {/* Straight into the app: recording needs no account, so sending
+                people to a sign-in page first would be a pointless gate. */}
+            <Link href="/record" className="btn btn-primary">
               Start recording
             </Link>
             <a href="#pricing" className="btn">
@@ -59,7 +65,17 @@ export default async function LandingPage() {
             not auto-renew, and new accounts start with {SIGNUP_GRANT_CREDITS} credits free.
           </p>
 
-          <PricingTable canPurchase={false} />
+          {IS_STATIC_BUILD && !FULL_APP_URL ? (
+            <p className="banner">
+              This is the free, offline build. Credits and the AI features need the hosted version,
+              which is not linked from here yet.
+            </p>
+          ) : null}
+
+          <PricingTable
+            canPurchase={false}
+            signInHref={IS_STATIC_BUILD ? (FULL_APP_URL ?? '/record') : '/signin'}
+          />
 
           <h3 className={styles.subheading}>What credits buy</h3>
           <ul className={styles.rateList}>
@@ -94,11 +110,27 @@ export default async function LandingPage() {
         </section>
 
         <footer className={styles.footer}>
-          <Link href="/signin">Sign in</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/privacy">Privacy</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/terms">Terms</Link>
+          {IS_STATIC_BUILD ? (
+            <>
+              <Link href="/record">Open Reel</Link>
+              <span aria-hidden="true">·</span>
+              {FULL_APP_URL ? (
+                <>
+                  <a href={FULL_APP_URL}>Full version with sync &amp; AI</a>
+                  <span aria-hidden="true">·</span>
+                </>
+              ) : null}
+              <a href="https://github.com/keshevplus/Doctor">Source</a>
+            </>
+          ) : (
+            <>
+              <Link href="/signin">Sign in</Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/privacy">Privacy</Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/terms">Terms</Link>
+            </>
+          )}
         </footer>
       </main>
     </div>

@@ -36,6 +36,41 @@ resolver. `app/` and `components/` use `@/` freely.
 
 ---
 
+## Two build targets
+
+One codebase, two deployments, split along the line the architecture already
+had:
+
+- **Vercel** (`npm run build`) — the whole product.
+- **GitHub Pages** (`npm run build:pages`) — the local-first half only.
+
+Pages serves files and nothing else, so auth, credits and Stripe cannot run
+there. Rather than stub them, `scripts/build-pages.mjs` moves `app/api`,
+`app/(app)`, `app/signin` and `middleware.ts` out of the tree, builds with
+`output: 'export'`, and puts them back. Two reasons for removal over stubbing:
+`output: 'export'` refuses to build route handlers at all, and a stub would let
+a dead sign-in button ship. With the routes gone the Credits tab disappears and
+the links point at the real deployment.
+
+`lib/build-mode.ts` carries the one flag the app itself needs. It gates three
+things: the root layout skips `headers()` (no middleware, no request), the nav
+drops the Credits tab, and the landing page skips the session check.
+
+That this split is even possible is a consequence of the local-first design
+below, not a workaround bolted on afterwards.
+
+### Route groups
+
+- `app/(local)/` — record, notes, analysis. **No auth.** These run entirely
+  against IndexedDB. Gating them would break the "no account needed" promise
+  and create a hosting bill for users who cost nothing to serve.
+- `app/(app)/` — billing. `requireUser()` in the segment layout.
+
+The signed-in credit badge on the local pages streams in behind Suspense and
+**fails soft**: if the session lookup or balance query throws, it renders
+nothing. An app whose selling point is that it works offline must not return a
+500 because Postgres blinked.
+
 ## Local-first, and why it is also the business model
 
 Notes live in IndexedDB and are read and written there first. Sync, when a user
@@ -247,6 +282,19 @@ breach.
 
 `node --test` with the built-in runner and no framework. The pure modules —
 `analysis/stats`, `export/format`, `credits/pricing` — are fully covered.
+
+`test/e2e/static-site.mjs` drives real Chromium against the built static site.
+It is separate from `npm test` because it needs a browser and a served build,
+and it exists because the failures that matter in a static export are invisible
+to both unit tests and the build: hydration mismatches, IndexedDB breaking
+under the export's asset paths, links to routes that only exist in the server
+build. All of those produce a clean build and a broken page.
+
+It has already earned its place — it caught `Recorder` feature-detecting the
+Speech API *during render*, which made the server emit the "not supported"
+banner and the client omit it. React threw away and re-rendered the tree on
+every visit to `/record`, on Vercel as much as on Pages. The build was green
+throughout.
 
 `test/pricing.test.ts` is worth calling out: it asserts **business**
 invariants, not implementation details. No action priced below cost at the bulk

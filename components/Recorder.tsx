@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { speechRecognitionAvailable, useRecorder, type RecorderResult } from '@/lib/recorder/use-recorder';
 import styles from './Recorder.module.css';
@@ -12,6 +12,23 @@ interface RecorderProps {
 export function Recorder({ onSaved }: RecorderProps) {
   const [captureAudio, setCaptureAudio] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  /*
+   * Feature detection has to happen after mount, not during render.
+   *
+   * `window.SpeechRecognition` does not exist on the server, so testing for it
+   * while rendering makes the server emit the "not supported" banner and the
+   * client omit it — a hydration mismatch that React resolves by throwing away
+   * and re-rendering the tree.
+   *
+   * Optimistic default: assume support until proven otherwise, so the majority
+   * who have it never see the banner flash. Both the server render and the
+   * first client render use this same value, which is what makes them agree.
+   */
+  const [hasSpeechApi, setHasSpeechApi] = useState(true);
+  useEffect(() => {
+    setHasSpeechApi(speechRecognitionAvailable());
+  }, []);
 
   const handleComplete = useCallback(
     async (result: RecorderResult) => {
@@ -31,7 +48,6 @@ export function Recorder({ onSaved }: RecorderProps) {
 
   const minutes = Math.floor(recorder.elapsedSec / 60);
   const seconds = recorder.elapsedSec % 60;
-  const hasSpeechApi = speechRecognitionAvailable();
   const live = `${recorder.transcript}${recorder.interimTranscript}`.trim();
 
   return (

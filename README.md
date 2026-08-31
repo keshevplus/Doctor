@@ -10,6 +10,35 @@ credits, because they cost us.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — why the code is shaped this way
 - **[docs/BUSINESS.md](docs/BUSINESS.md)** — pricing, unit economics, go-to-market
 
+## Two deployments
+
+The app splits cleanly in half, and the halves host differently.
+
+| | GitHub Pages | Vercel |
+| --- | --- | --- |
+| Record, live transcription | ✅ | ✅ |
+| Notes, tags, search, export | ✅ | ✅ |
+| Analysis | ✅ | ✅ |
+| Works offline, no account | ✅ | ✅ |
+| Sign in (passkeys, OAuth) | ✗ | ✅ |
+| Credits, Stripe checkout | ✗ | ✅ |
+| Cloud transcription, AI | ✗ | ✅ |
+| Cross-device sync | ✗ | ✅ |
+
+GitHub Pages serves files and nothing else — no Node runtime, no request
+handlers, no database, nowhere to keep a secret — so the auth, credits and
+Stripe half genuinely cannot run there. It is not a configuration problem to
+solve; it is what Pages is.
+
+What *can* run there is the entire local-first half, because it was built to
+need no server: notes live in the browser's IndexedDB and never leave it. So
+the Pages build is a complete, free, offline voice notes app, and the Vercel
+build is that plus an account.
+
+`npm run build:pages` produces the static one. It removes the server-only
+routes before building rather than stubbing them, so a dead sign-in button
+cannot ship — the Credits tab is simply absent.
+
 ---
 
 ## Running it
@@ -51,9 +80,13 @@ arrive — that is the intended behaviour, not a bug.
 
 ```bash
 npm run dev          # dev server
-npm run build        # production build
+npm run build        # production build (Vercel target)
+npm run build:pages  # static build (GitHub Pages target) → out/
+npm run serve:pages  # serve out/ under the same base path Pages uses
 npm test             # unit tests (node --test, no framework)
+npm run test:e2e     # browser smoke test against a served static build
 npm run typecheck    # tsc --noEmit
+npm run lint         # eslint
 npm run db:generate  # generate migrations from lib/db/schema.ts
 npm run db:migrate   # apply them
 npm run db:studio    # browse the database
@@ -93,6 +126,43 @@ npm run stripe:sync  # push the pricing catalog to Stripe
    every cold-starting instance would race every other one.
 
 8. **Run `npm run stripe:sync`** against the live key to create the catalog.
+
+---
+
+## Deploying to GitHub Pages
+
+The workflow in `.github/workflows/pages.yml` builds and publishes on every
+push to `main`, and can be run by hand from the Actions tab.
+
+1. **Settings → Pages → Source: GitHub Actions.** Not "Deploy from a branch" —
+   the site is built, not committed.
+
+2. That is the whole setup. `BASE_PATH` is derived from the repository name, so
+   a project page at `https://<user>.github.io/<repo>/` works with no config.
+
+3. **Optional:** set a repository variable `FULL_APP_URL` (Settings → Secrets
+   and variables → Actions → Variables) to your Vercel URL. The static build
+   then links to it for sign-in and credits. Left unset, those links are simply
+   omitted rather than pointed at a guessed domain.
+
+To check the export locally exactly as Pages will serve it:
+
+```bash
+npm run build:pages
+npm run serve:pages     # http://localhost:8099/Doctor/
+npm run test:e2e        # in another shell
+```
+
+The e2e test drives real Chromium against the built site. It exists because the
+failures that matter in a static export — hydration mismatches, IndexedDB
+breaking under the export's asset paths, links to routes that only exist in the
+server build — all produce a completely successful build and a broken page. It
+has already caught one such bug.
+
+For a custom domain or a user page served from the root, set `BASE_PATH` to an
+empty string.
+
+---
 
 ### Cron jobs
 

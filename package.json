@@ -16,7 +16,10 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "stripe:sync": "tsx scripts/sync-stripe-catalog.ts",
-    "test": "node --test --experimental-strip-types \"test/**/*.test.ts\""
+    "test": "node --test --experimental-strip-types \"test/**/*.test.ts\"",
+    "build:pages": "node scripts/build-pages.mjs",
+    "serve:pages": "node scripts/serve-pages.mjs",
+    "test:e2e": "node test/e2e/static-site.mjs"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",
@@ -41,6 +44,7 @@
     "drizzle-kit": "^0.30.2",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.6",
+    "playwright": "^1.49.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }

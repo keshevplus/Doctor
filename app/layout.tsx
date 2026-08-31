@@ -2,7 +2,35 @@ import type { Metadata, Viewport } from 'next';
 import { Fraunces, IBM_Plex_Sans } from 'next/font/google';
 import { headers } from 'next/headers';
 
+import { IS_STATIC_BUILD } from '@/lib/build-mode';
 import './globals.css';
+
+/**
+ * CSP for the static build, delivered as a meta tag because GitHub Pages
+ * cannot set response headers.
+ *
+ * Necessarily weaker than the nonce-based policy middleware serves on Vercel:
+ * with no server to mint a per-request nonce, inline scripts can only be
+ * allowed wholesale. Still worth having — it keeps `object-src`, `base-uri`
+ * and `frame-ancestors` locked down, and the static build has no session
+ * cookie or API surface for an injected script to abuse.
+ */
+const STATIC_CSP = [
+  `default-src 'self'`,
+  `script-src 'self' 'unsafe-inline'`,
+  `style-src 'self' 'unsafe-inline'`,
+  `img-src 'self' blob: data:`,
+  `font-src 'self'`,
+  `media-src 'self' blob:`,
+  `connect-src 'self'`,
+  `form-action 'self'`,
+  `base-uri 'self'`,
+  `object-src 'none'`,
+  // No frame-ancestors: browsers ignore it when it arrives via <meta>, and
+  // leaving it in only logs a console warning on every page load. Clickjacking
+  // protection genuinely needs a response header, which GitHub Pages cannot
+  // set — one more thing the hosted deployment gets and this build does not.
+].join('; ');
 
 /*
  * Fonts are self-hosted by next/font at build time rather than fetched from
@@ -40,18 +68,36 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // The nonce minted by middleware for this request. Next.js reads it off the
-  // header automatically and stamps it onto the scripts it injects.
-  const nonce = (await headers()).get('x-nonce') ?? undefined;
+  if (!IS_STATIC_BUILD) {
+    /*
+     * Reading headers opts this tree into dynamic rendering, and that is the
+     * entire point of the call — the return value is unused.
+     *
+     * A nonce-based CSP only works if the page is rendered per request: Next.js
+     * takes the nonce from the Content-Security-Policy header middleware sets
+     * and stamps it onto the scripts it injects. Were these routes prerendered
+     * at build time instead, every visitor would receive the same baked-in
+     * nonce while middleware issued a fresh one per request, and the mismatch
+     * would block the app's own scripts.
+     *
+     * The static export has no middleware and no request to read, so it skips
+     * this and carries the weaker meta-tag policy above.
+     */
+    await headers();
+  }
 
   return (
     <html lang="en" className={`${fraunces.variable} ${plex.variable}`}>
+      <head>
+        {IS_STATIC_BUILD ? (
+          <meta httpEquiv="Content-Security-Policy" content={STATIC_CSP} />
+        ) : null}
+      </head>
       <body>
         <a href="#main" className="visually-hidden">
           Skip to content
         </a>
         {children}
-        {nonce ? <meta name="csp-nonce" content={nonce} /> : null}
       </body>
     </html>
   );

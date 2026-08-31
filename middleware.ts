@@ -18,7 +18,13 @@ import { NextResponse, type NextRequest } from 'next/server';
  * route is about to repeat anyway.
  */
 
-const APP_ROUTES = ['/record', '/notes', '/analysis', '/billing', '/settings'];
+/*
+ * Only routes that genuinely need an account. `/record`, `/notes` and
+ * `/analysis` are deliberately absent: they run entirely against IndexedDB in
+ * the browser, and redirecting a signed-out visitor away from them would break
+ * the no-account promise the landing page makes.
+ */
+const APP_ROUTES = ['/billing', '/settings'];
 
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== 'production';

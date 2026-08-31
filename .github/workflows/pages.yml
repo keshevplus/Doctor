@@ -1,0 +1,85 @@
+name: Deploy to GitHub Pages
+
+# Publishes the local-first build of Reel — recording, notes, analysis, export
+# — as a static site. The auth, credits and Stripe half of the app cannot run
+# on Pages and is deliberately excluded by scripts/build-pages.mjs; that half
+# deploys to Vercel.
+
+on:
+  push:
+    branches: [main]
+  # Lets you publish from a feature branch before merging.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once, but let an in-flight one finish rather than
+# cancelling it — a half-published site is worse than a slightly stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The static build ships to real users, so it goes out only if the tests
+      # and types are clean.
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Build static site
+        run: npm run build:pages
+        env:
+          # Project Pages are served from /<repo>. For a user page or a custom
+          # domain, set this to an empty string.
+          BASE_PATH: /${{ github.event.repository.name }}
+          # Optional: the Vercel URL of the full app. Left unset, the static
+          # build omits its "full version" links rather than guessing a domain.
+          NEXT_PUBLIC_FULL_APP_URL: ${{ vars.FULL_APP_URL }}
+
+      # Drives real Chromium against the exported site. The failures that
+      # matter here — hydration mismatches, IndexedDB breaking under the
+      # export's asset paths, links to routes that only exist in the server
+      # build — all produce a perfectly successful build and a broken page.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke-test the export
+        env:
+          BASE: http://localhost:8099/${{ github.event.repository.name }}
+        run: |
+          BASE_PATH=/${{ github.event.repository.name }} npm run serve:pages &
+          for _ in $(seq 30); do
+            curl -sf -o /dev/null "$BASE/record/" && break
+            sleep 1
+          done
+          E2E_BASE_URL="$BASE" npm run test:e2e
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
