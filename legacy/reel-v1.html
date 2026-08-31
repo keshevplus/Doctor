@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reel — Voice Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1E1B18;
+    --panel: #26221E;
+    --panel-raised: #2C2723;
+    --border: rgba(242, 237, 231, 0.10);
+    --border-strong: rgba(242, 237, 231, 0.18);
+    --text: #F2EDE7;
+    --text-muted: #B8AFA6;
+    --amber: #D98E2B;
+    --amber-strong: #E6A34C;
+    --teal: #5C8A82;
+    --teal-strong: #74A69D;
+    --danger: #C0604A;
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 760px;
+    padding: 28px 20px 80px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  header.top h1 {
+    font-size: 32px;
+    margin: 0;
+    color: var(--amber-strong);
+  }
+
+  header.top .tagline {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  nav.tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px;
+    margin-bottom: 24px;
+  }
+
+  nav.tabs button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  nav.tabs button.active {
+    background: var(--amber);
+    color: #1E1B18;
+  }
+
+  nav.tabs button:not(.active):hover {
+    color: var(--text);
+    background: var(--panel-raised);
+  }
+
+  section.view { display: none; }
+  section.view.active { display: block; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+
+  .banner {
+    background: var(--panel-raised);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--amber);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+
+  /* ---- Record tab ---- */
+
+  .record-panel {
+    text-align: center;
+  }
+
+  .mic-button {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    border: 2px solid var(--amber);
+    background: transparent;
+    color: var(--amber-strong);
+    font-size: 30px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  }
+
+  .mic-button:hover { background: rgba(217, 142, 43, 0.12); }
+  .mic-button:active { transform: scale(0.97); }
+
+  .mic-button.recording {
+    background: var(--amber);
+    color: #1E1B18;
+    border-color: var(--amber);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 142, 43, 0.35); }
+    50% { box-shadow: 0 0 0 14px rgba(217, 142, 43, 0); }
+  }
+
+  .record-status {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    min-height: 18px;
+  }
+
+  .record-status .timer {
+    color: var(--amber-strong);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .live-transcript {
+    margin-top: 18px;
+    min-height: 60px;
+    padding: 16px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .live-transcript .interim { color: var(--text-muted); font-style: italic; }
+  .live-transcript.empty { color: var(--text-muted); font-style: italic; }
+
+  .record-settings {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .record-settings input[type="checkbox"] { accent-color: var(--amber); }
+
+  .review-heading {
+    margin: 26px 0 10px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  /* ---- Notes tab ---- */
+
+  .notes-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  input[type="text"], input[type="search"], textarea {
+    background: var(--panel-raised);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  input[type="text"]:focus, input[type="search"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--amber);
+  }
+
+  .search-row input { flex: 1; }
+
+  .tag-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag-chip, .tag-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: rgba(92, 138, 130, 0.18);
+    color: var(--teal-strong);
+    border: 1px solid rgba(92, 138, 130, 0.35);
+  }
+
+  .tag-filter-chip {
+    cursor: pointer;
+    background: var(--panel-raised);
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+  }
+
+  .tag-filter-chip.active {
+    background: var(--teal);
+    color: #1E1B18;
+    border-color: var(--teal);
+  }
+
+  .export-all-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .notes-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .note-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+
+  .note-card.editing { border-color: var(--amber); }
+
+  .note-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .note-text {
+    margin: 0 0 10px;
+    font-size: 15px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .note-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+  .note-audio {
+    width: 100%;
+    margin-bottom: 12px;
+    height: 34px;
+  }
+
+  .note-edit-text {
+    width: 100%;
+    min-height: 90px;
+    margin-bottom: 10px;
+    resize: vertical;
+  }
+
+  .note-edit-tags { width: 100%; margin-bottom: 12px; }
+
+  .note-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn {
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .btn:hover { background: var(--panel-raised); }
+
+  .btn-primary {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #1E1B18;
+  }
+
+  .btn-primary:hover { background: var(--amber-strong); }
+
+  .btn-ghost { color: var(--text-muted); }
+
+  .btn-danger { color: var(--danger); border-color: rgba(192, 96, 74, 0.4); }
+  .btn-danger:hover { background: rgba(192, 96, 74, 0.12); }
+
+  .export-menu { position: relative; }
+
+  .export-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--panel-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 5;
+    min-width: 90px;
+  }
+
+  .export-dropdown button {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 13px;
+    text-align: left;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .export-dropdown button:hover { background: rgba(217, 142, 43, 0.15); color: var(--amber-strong); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px 20px;
+    font-size: 14px;
+  }
+
+  /* ---- Analysis tab ---- */
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-card .value {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    color: var(--amber-strong);
+  }
+
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .analysis-panel { margin-bottom: 20px; }
+  .analysis-panel h3 { margin: 0 0 16px; font-size: 16px; }
+
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 140px;
+  }
+
+  .chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 8px;
+  }
+
+  .chart-bar {
+    width: 100%;
+    max-width: 34px;
+    background: var(--teal);
+    border-radius: 6px 6px 2px 2px;
+    min-height: 3px;
+  }
+
+  .chart-col .day-label { font-size: 11px; color: var(--text-muted); }
+  .chart-col .day-count { font-size: 11px; color: var(--text-muted); }
+
+  .word-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .word-row { display: flex; align-items: center; gap: 10px; }
+  .word-row .word { width: 90px; font-size: 13px; flex-shrink: 0; }
+  .word-row .bar-track {
+    flex: 1;
+    background: var(--panel-raised);
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .word-row .bar-fill { height: 100%; background: var(--amber); border-radius: 6px; }
+  .word-row .count { font-size: 12px; color: var(--text-muted); width: 24px; text-align: right; }
+
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-card .value { font-size: 20px; }
+    .word-row .word { width: 66px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div>
+      <h1>Reel</h1>
+      <div class="tagline">Voice notes, transcribed and kept</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="record" class="active">Record</button>
+    <button data-tab="notes">Notes</button>
+    <button data-tab="analysis">Analysis</button>
+  </nav>
+
+  <div id="banner-slot"></div>
+
+  <section id="view-record" class="view active">
+    <div class="panel record-panel">
+      <button id="mic-btn" class="mic-button" title="Start recording">●</button>
+      <div class="record-status" id="record-status">Tap to start recording</div>
+      <div class="live-transcript empty" id="live-transcript">Your transcript will appear here as you speak.</div>
+      <div class="record-settings">
+        <label>
+          <input type="checkbox" id="record-audio-toggle"> Also save the audio recording
+        </label>
+      </div>
+    </div>
+    <div id="review-slot"></div>
+  </section>
+
+  <section id="view-notes" class="view">
+    <div class="notes-toolbar">
+      <div class="search-row">
+        <input type="search" id="search-input" placeholder="Search notes…">
+      </div>
+      <div class="tag-filter-row" id="tag-filter-row"></div>
+      <div class="export-all-row">
+        <div class="export-menu">
+          <button class="btn btn-ghost" id="export-all-btn">Export all ▾</button>
+          <div class="export-dropdown" id="export-all-dropdown" hidden>
+            <button data-format="txt" data-action="export-all">.txt</button>
+            <button data-format="md" data-action="export-all">.md</button>
+            <button data-format="json" data-action="export-all">.json</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes-list" id="notes-list"></div>
+  </section>
+
+  <section id="view-analysis" class="view">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="panel analysis-panel">
+      <h3>Last 7 days</h3>
+      <div class="chart" id="activity-chart"></div>
+    </div>
+    <div class="panel analysis-panel">
+      <h3>Most used words</h3>
+      <div class="word-list" id="word-list"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'reel-voice-notes';
+  var SETTINGS_KEY = 'reel-voice-notes-settings';
+
+  var STOPWORDS = new Set(['a','about','after','again','all','am','an','and','any','are','as','at','be','because','been','before','being','below','between','both','but','by','can','could','did','do','does','doing','down','during','each','few','for','from','further','had','has','have','having','he','her','here','hers','herself','him','himself','his','how','i','if','in','into','is','it','its','itself','just','me','more','most','my','myself','no','nor','not','now','of','off','on','once','only','or','other','our','ours','ourselves','out','over','own','same','she','should','so','some','such','than','that','the','their','theirs','them','themselves','then','there','these','they','this','those','through','to','too','under','until','up','very','was','we','were','what','when','where','which','while','who','whom','why','will','with','would','you','your','yours','yourself','yourselves','im','ive','dont','youre','its','thats','theres','gonna','gotta','okay','ok','uh','um','yeah','like','just','really']);
+
+  // ---------- state ----------
+
+  var notes = loadNotes();
+  var settings = loadSettings();
+  var activeTab = 'record';
+  var searchQuery = '';
+  var activeTagFilter = null;
+  var editingId = null;
+  var lastSavedNoteId = null;
+
+  // recording state
+  var recognition = null;
+  var mediaRecorder = null;
+  var mediaStream = null;
+  var audioChunks = [];
+  var recording = false;
+  var finalTranscript = '';
+  var interimTranscript = '';
+  var timerHandle = null;
+  var recordStartTime = null;
+
+  // ---------- storage ----------
+
+  function loadNotes() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(normalizeNote).filter(Boolean);
+    } catch (e) {
+      console.error('Failed to load notes from storage', e);
+      return [];
+    }
+  }
+
+  function normalizeNote(n) {
+    if (!n) return null;
+    if (typeof n === 'string') {
+      return { id: makeId(), text: n, tags: [], audio: null, createdAt: Date.now(), updatedAt: Date.now() };
+    }
+    var text = typeof n.text === 'string' ? n.text : (typeof n.transcript === 'string' ? n.transcript : '');
+    return {
+      id: n.id || makeId(),
+      text: text,
+      tags: Array.isArray(n.tags) ? n.tags.filter(function (t) { return typeof t === 'string' && t.trim(); }) : [],
+      audio: typeof n.audio === 'string' ? n.audio : null,
+      createdAt: n.createdAt || n.timestamp || Date.now(),
+      updatedAt: n.updatedAt || n.createdAt || Date.now()
+    };
+  }
+
+  function saveNotes() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      return true;
+    } catch (e) {
+      console.error('Failed to save notes', e);
+      return false;
+    }
+  }
+
+  function loadSettings() {
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      var parsed = raw ? JSON.parse(raw) : {};
+      return { recordAudio: parsed.recordAudio !== false };
+    } catch (e) {
+      return { recordAudio: true };
+    }
+  }
+
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  }
+
+  // ---------- helpers ----------
+
+  function makeId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'n' + Date.now() + Math.random().toString(16).slice(2);
+  }
+
+  function esc(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function countWords(text) {
+    var t = (text || '').trim();
+    if (!t) return 0;
+    return t.split(/\s+/).length;
+  }
+
+  function formatDate(ts) {
+    var d = new Date(ts);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' +
+      d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function parseTags(raw) {
+    return (raw || '')
+      .split(',')
+      .map(function (t) { return t.trim().toLowerCase(); })
+      .filter(function (t) { return t.length > 0; })
+      .filter(function (t, i, arr) { return arr.indexOf(t) === i; });
+  }
+
+  function debounce(fn, delay) {
+    var timer = null;
+    return function () {
+      var args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function () { fn.apply(null, args); }, delay);
+    };
+  }
+
+  function showBanner(msg) {
+    var slot = document.getElementById('banner-slot');
+    slot.innerHTML = '<div class="banner">' + esc(msg) + '</div>';
+    setTimeout(function () { if (slot.firstChild) slot.innerHTML = ''; }, 6000);
+  }
+
+  function download(filename, content, mime) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function noteToMarkdown(note) {
+    var lines = ['### ' + formatDate(note.createdAt), ''];
+    if (note.tags.length) lines.push('Tags: ' + note.tags.map(function (t) { return '`' + t + '`'; }).join(' '), '');
+    lines.push(note.text, '');
+    return lines.join('\n');
+  }
+
+  function noteToText(note) {
+    var lines = [formatDate(note.createdAt)];
+    if (note.tags.length) lines.push('Tags: ' + note.tags.join(', '));
+    lines.push('', note.text, '');
+    return lines.join('\n');
+  }
+
+  function exportNote(note, format) {
+    var stamp = new Date(note.createdAt).toISOString().slice(0, 10);
+    if (format === 'json') download('reel-note-' + stamp + '.json', JSON.stringify(note, null, 2), 'application/json');
+    else if (format === 'md') download('reel-note-' + stamp + '.md', noteToMarkdown(note), 'text/markdown');
+    else download('reel-note-' + stamp + '.txt', noteToText(note), 'text/plain');
+  }
+
+  function exportSet(list, format) {
+    var stamp = new Date().toISOString().slice(0, 10);
+    if (format === 'json') download('reel-notes-' + stamp + '.json', JSON.stringify(list, null, 2), 'application/json');
+    else if (format === 'md') download('reel-notes-' + stamp + '.md', list.map(noteToMarkdown).join('\n---\n\n'), 'text/markdown');
+    else download('reel-notes-' + stamp + '.txt', list.map(noteToText).join('\n----------\n\n'), 'text/plain');
+  }
+
+  // ---------- tabs ----------
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('nav.tabs button').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('section.view').forEach(function (v) {
+      v.classList.toggle('active', v.id === 'view-' + tab);
+    });
+    if (tab === 'notes') renderNotesList();
+    if (tab === 'analysis') renderAnalysis();
+  }
+
+  document.querySelectorAll('nav.tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () { switchTab(btn.dataset.tab); });
+  });
+
+  // ---------- recording ----------
+
+  var micBtn = document.getElementById('mic-btn');
+  var statusEl = document.getElementById('record-status');
+  var liveEl = document.getElementById('live-transcript');
+  var audioToggle = document.getElementById('record-audio-toggle');
+
+  audioToggle.checked = settings.recordAudio;
+  audioToggle.addEventListener('change', function () {
+    settings.recordAudio = audioToggle.checked;
+    saveSettings();
+  });
+
+  micBtn.addEventListener('click', function () {
+    if (recording) stopRecording(false);
+    else startRecording();
+  });
+
+  function pickMimeType() {
+    if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+    var candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    for (var i = 0; i < candidates.length; i++) {
+      if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
+    }
+    return '';
+  }
+
+  function updateLiveTranscript() {
+    var text = (finalTranscript + interimTranscript).trim();
+    if (!text) {
+      liveEl.className = 'live-transcript empty';
+      liveEl.textContent = 'Your transcript will appear here as you speak.';
+      return;
+    }
+    liveEl.className = 'live-transcript';
+    liveEl.innerHTML = esc(finalTranscript) + '<span class="interim">' + esc(interimTranscript) + '</span>';
+  }
+
+  function startTimer() {
+    timerHandle = setInterval(function () {
+      var secs = Math.floor((Date.now() - recordStartTime) / 1000);
+      var m = Math.floor(secs / 60), s = secs % 60;
+      statusEl.innerHTML = 'Recording — <span class="timer">' + m + ':' + (s < 10 ? '0' : '') + s + '</span>';
+    }, 500);
+  }
+
+  function stopTimer() {
+    if (timerHandle) clearInterval(timerHandle);
+    timerHandle = null;
+  }
+
+  async function startRecording() {
+    if (recording) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      showBanner('Speech recognition is not supported in this browser. Try Chrome or Edge on desktop or Android.');
+      return;
+    }
+
+    lastSavedNoteId = null;
+    document.getElementById('review-slot').innerHTML = '';
+    finalTranscript = '';
+    interimTranscript = '';
+    audioChunks = [];
+
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = navigator.language || 'en-US';
+
+    recognition.onresult = function (event) {
+      interimTranscript = '';
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        var piece = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalTranscript += piece + ' ';
+        else interimTranscript += piece;
+      }
+      updateLiveTranscript();
+    };
+
+    recognition.onerror = function (e) {
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      if (e.error === 'not-allowed' || e.error === 'audio-capture') {
+        showBanner('Microphone access was blocked. Allow microphone access to record voice notes.');
+        stopRecording(true);
+      }
+    };
+
+    recognition.onend = function () {
+      if (recording) {
+        try { recognition.start(); } catch (e) {}
+      }
+    };
+
+    recording = true;
+    recordStartTime = Date.now();
+    micBtn.classList.add('recording');
+    micBtn.textContent = '■';
+    micBtn.title = 'Stop recording';
+    startTimer();
+
+    try { recognition.start(); } catch (e) { console.error(e); }
+
+    if (settings.recordAudio && navigator.mediaDevices && window.MediaRecorder) {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        var mimeType = pickMimeType();
+        mediaRecorder = new MediaRecorder(mediaStream, mimeType ? { mimeType: mimeType } : undefined);
+        mediaRecorder.ondataavailable = function (e) {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.start();
+      } catch (e) {
+        console.warn('Audio recording unavailable', e);
+        mediaRecorder = null;
+      }
+    }
+  }
+
+  function stopRecording(discard) {
+    if (!recording) return;
+    recording = false;
+    stopTimer();
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '●';
+    micBtn.title = 'Start recording';
+    statusEl.textContent = 'Tap to start recording';
+
+    if (recognition) {
+      recognition.onend = null;
+      try { recognition.stop(); } catch (e) {}
+    }
+
+    function stopStream() {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(function (t) { t.stop(); });
+        mediaStream = null;
+      }
+    }
+
+    function finish(audioDataUrl) {
+      var text = (finalTranscript + ' ' + interimTranscript).trim();
+      updateLiveTranscript();
+      if (discard || !text) return;
+
+      var note = {
+        id: makeId(),
+        text: text,
+        tags: [],
+        audio: audioDataUrl || null,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      notes.unshift(note);
+      var ok = saveNotes();
+      if (!ok && note.audio) {
+        note.audio = null;
+        var retryOk = saveNotes();
+        if (retryOk) showBanner('Saved the transcript, but local storage was full so the audio recording was dropped.');
+        else { notes.shift(); showBanner('Could not save this note — local storage is full.'); return; }
+      } else if (!ok) {
+        notes.shift();
+        showBanner('Could not save this note — local storage is full.');
+        return;
+      }
+
+      lastSavedNoteId = note.id;
+      editingId = note.id;
+      renderReviewSlot();
+    }
+
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.onstop = function () {
+        var blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+        stopStream();
+        if (blob.size === 0) { finish(null); return; }
+        var reader = new FileReader();
+        reader.onloadend = function () { finish(reader.result); };
+        reader.readAsDataURL(blob);
+      };
+      try { mediaRecorder.stop(); } catch (e) { stopStream(); finish(null); }
+    } else {
+      stopStream();
+      finish(null);
+    }
+  }
+
+  function renderReviewSlot() {
+    var slot = document.getElementById('review-slot');
+    var note = notes.find(function (n) { return n.id === lastSavedNoteId; });
+    if (!note) { slot.innerHTML = ''; return; }
+    slot.innerHTML = '<div class="review-heading">Saved — add tags or fix the text</div>' + renderNoteCard(note);
+  }
+
+  // ---------- note card ----------
+
+  function renderNoteCard(note) {
+    var editing = editingId === note.id;
+    var wordCount = countWords(note.text);
+    var dateStr = formatDate(note.createdAt);
+    var audioHtml = note.audio ? '<audio controls class="note-audio" src="' + note.audio + '"></audio>' : '';
+
+    if (editing) {
+      return (
+        '<article class="note-card editing" data-id="' + note.id + '">' +
+          '<div class="note-meta"><span>' + dateStr + '</span><span>' + wordCount + ' words</span></div>' +
+          '<textarea class="note-edit-text" data-role="edit-text">' + esc(note.text) + '</textarea>' +
+          '<input type="text" class="note-edit-tags" data-role="edit-tags" placeholder="tags, comma separated" value="' + esc(note.tags.join(', ')) + '">' +
+          audioHtml +
+          '<div class="note-actions">' +
+            '<button class="btn btn-primary" data-action="save-edit" data-id="' + note.id + '">Save</button>' +
+            '<button class="btn btn-ghost" data-action="cancel-edit" data-id="' + note.id + '">Cancel</button>' +
+            '<button class="btn btn-danger" data-action="delete" data-id="' + note.id + '">Delete</button>' +
+          '</div>' +
+        '</article>'
+      );
+    }
+
+    var tagsHtml = note.tags.map(function (t) { return '<span class="tag-chip">' + esc(t) + '</span>'; }).join('');
+
+    return (
+      '<article class="note-card" data-id="' + note.id + '">' +
+        '<div class="note-meta"><span>' + dateStr + '</span><span>' + wordCount + ' words</span></div>' +
+        '<p class="note-text">' + esc(note.text) + '</p>' +
+        (tagsHtml ? '<div class="note-tags">' + tagsHtml + '</div>' : '') +
+        audioHtml +
+        '<div class="note-actions">' +
+          '<button class="btn btn-ghost" data-action="edit" data-id="' + note.id + '">Edit</button>' +
+          '<div class="export-menu">' +
+            '<button class="btn btn-ghost" data-action="toggle-export" data-id="' + note.id + '">Export ▾</button>' +
+            '<div class="export-dropdown" data-export-for="' + note.id + '" hidden>' +
+              '<button data-action="export" data-format="txt" data-id="' + note.id + '">.txt</button>' +
+              '<button data-action="export" data-format="md" data-id="' + note.id + '">.md</button>' +
+              '<button data-action="export" data-format="json" data-id="' + note.id + '">.json</button>' +
+            '</div>' +
+          '</div>' +
+          '<button class="btn btn-danger" data-action="delete" data-id="' + note.id + '">Delete</button>' +
+        '</div>' +
+      '</article>'
+    );
+  }
+
+  function rerenderNoteInPlace(id) {
+    var note = notes.find(function (n) { return n.id === id; });
+    var existing = document.querySelector('.note-card[data-id="' + id + '"]');
+    if (!existing) return;
+    if (!note) { existing.remove(); return; }
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = renderNoteCard(note);
+    existing.replaceWith(wrapper.firstElementChild);
+  }
+
+  // ---------- notes list / filters ----------
+
+  function getAllTags() {
+    var set = new Set();
+    notes.forEach(function (n) { n.tags.forEach(function (t) { set.add(t); }); });
+    return Array.from(set).sort();
+  }
+
+  function getFilteredNotes() {
+    var q = searchQuery.trim().toLowerCase();
+    return notes.filter(function (n) {
+      if (activeTagFilter && n.tags.indexOf(activeTagFilter) === -1) return false;
+      if (!q) return true;
+      return n.text.toLowerCase().indexOf(q) !== -1 || n.tags.some(function (t) { return t.indexOf(q) !== -1; });
+    });
+  }
+
+  function renderTagFilters() {
+    var row = document.getElementById('tag-filter-row');
+    var tags = getAllTags();
+    if (!tags.length) { row.innerHTML = ''; return; }
+    row.innerHTML = tags.map(function (t) {
+      return '<span class="tag-filter-chip' + (activeTagFilter === t ? ' active' : '') + '" data-tag="' + esc(t) + '">' + esc(t) + '</span>';
+    }).join('');
+  }
+
+  function renderNotesList() {
+    renderTagFilters();
+    var list = document.getElementById('notes-list');
+    var filtered = getFilteredNotes();
+    if (!filtered.length) {
+      list.innerHTML = '<div class="empty-state">' + (notes.length ? 'No notes match your search.' : 'No voice notes yet. Record your first one from the Record tab.') + '</div>';
+      return;
+    }
+    list.innerHTML = filtered
+      .slice()
+      .sort(function (a, b) { return b.createdAt - a.createdAt; })
+      .map(renderNoteCard)
+      .join('');
+  }
+
+  document.getElementById('search-input').addEventListener('input', debounce(function (e) {
+    searchQuery = e.target.value;
+    renderNotesList();
+  }, 150));
+
+  document.getElementById('tag-filter-row').addEventListener('click', function (e) {
+    var chip = e.target.closest('.tag-filter-chip');
+    if (!chip) return;
+    var tag = chip.dataset.tag;
+    activeTagFilter = activeTagFilter === tag ? null : tag;
+    renderNotesList();
+  });
+
+  // export-all dropdown
+  document.getElementById('export-all-btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var dd = document.getElementById('export-all-dropdown');
+    dd.hidden = !dd.hidden;
+  });
+
+  document.getElementById('export-all-dropdown').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-action="export-all"]');
+    if (!btn) return;
+    exportSet(getFilteredNotes(), btn.dataset.format);
+    document.getElementById('export-all-dropdown').hidden = true;
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.export-menu')) {
+      document.querySelectorAll('.export-dropdown').forEach(function (dd) { dd.hidden = true; });
+    }
+  });
+
+  // delegated actions across review slot + notes list
+  function handleCardAction(e) {
+    var actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    var action = actionEl.dataset.action;
+    var id = actionEl.dataset.id;
+
+    if (action === 'edit') {
+      editingId = id;
+      rerenderNoteInPlace(id);
+    } else if (action === 'cancel-edit') {
+      if (lastSavedNoteId === id) lastSavedNoteId = null;
+      editingId = null;
+      if (document.getElementById('review-slot').contains(actionEl)) renderReviewSlot();
+      else rerenderNoteInPlace(id);
+    } else if (action === 'save-edit') {
+      var card = actionEl.closest('.note-card');
+      var text = card.querySelector('[data-role="edit-text"]').value.trim();
+      var tags = parseTags(card.querySelector('[data-role="edit-tags"]').value);
+      var note = notes.find(function (n) { return n.id === id; });
+      if (note) {
+        note.text = text || note.text;
+        note.tags = tags;
+        note.updatedAt = Date.now();
+        saveNotes();
+      }
+      editingId = null;
+      if (document.getElementById('review-slot').contains(actionEl)) renderReviewSlot();
+      else rerenderNoteInPlace(id);
+    } else if (action === 'delete') {
+      if (!confirm('Delete this note? This cannot be undone.')) return;
+      notes = notes.filter(function (n) { return n.id !== id; });
+      saveNotes();
+      if (lastSavedNoteId === id) { lastSavedNoteId = null; document.getElementById('review-slot').innerHTML = ''; }
+      var cardEl = actionEl.closest('.note-card');
+      if (cardEl) cardEl.remove();
+      if (activeTab === 'notes' && !document.querySelector('#notes-list .note-card')) renderNotesList();
+    } else if (action === 'toggle-export') {
+      e.stopPropagation();
+      var dd = document.querySelector('.export-dropdown[data-export-for="' + id + '"]');
+      document.querySelectorAll('.export-dropdown').forEach(function (d) { if (d !== dd) d.hidden = true; });
+      if (dd) dd.hidden = !dd.hidden;
+    } else if (action === 'export') {
+      var n = notes.find(function (n) { return n.id === id; });
+      if (n) exportNote(n, actionEl.dataset.format);
+      var dropdown = actionEl.closest('.export-dropdown');
+      if (dropdown) dropdown.hidden = true;
+    }
+  }
+
+  document.getElementById('notes-list').addEventListener('click', handleCardAction);
+  document.getElementById('review-slot').addEventListener('click', handleCardAction);
+
+  // ---------- analysis ----------
+
+  function renderAnalysis() {
+    var totalNotes = notes.length;
+    var totalWords = notes.reduce(function (sum, n) { return sum + countWords(n.text); }, 0);
+    var avgWords = totalNotes ? Math.round(totalWords / totalNotes) : 0;
+
+    document.getElementById('stats-grid').innerHTML =
+      statCard(totalNotes, 'Total notes') +
+      statCard(totalWords, 'Total words') +
+      statCard(avgWords, 'Avg words / note');
+
+    renderActivityChart();
+    renderTopWords();
+  }
+
+  function statCard(value, label) {
+    return '<div class="stat-card"><div class="value">' + value + '</div><div class="label">' + label + '</div></div>';
+  }
+
+  function renderActivityChart() {
+    var days = [];
+    var now = new Date();
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      days.push(d);
+    }
+    var counts = days.map(function (day) {
+      return notes.filter(function (n) {
+        var nd = new Date(n.createdAt);
+        return nd.getFullYear() === day.getFullYear() && nd.getMonth() === day.getMonth() && nd.getDate() === day.getDate();
+      }).length;
+    });
+    var max = Math.max.apply(null, counts.concat([1]));
+
+    document.getElementById('activity-chart').innerHTML = days.map(function (day, i) {
+      var pct = Math.round((counts[i] / max) * 100);
+      var label = day.toLocaleDateString(undefined, { weekday: 'short' })[0];
+      return (
+        '<div class="chart-col">' +
+          '<div class="day-count">' + counts[i] + '</div>' +
+          '<div class="chart-bar" style="height:' + Math.max(pct, 3) + '%"></div>' +
+          '<div class="day-label">' + label + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function renderTopWords() {
+    var freq = {};
+    notes.forEach(function (n) {
+      var words = (n.text || '').toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/);
+      words.forEach(function (w) {
+        if (w.length < 3 || STOPWORDS.has(w)) return;
+        freq[w] = (freq[w] || 0) + 1;
+      });
+    });
+    var top = Object.keys(freq)
+      .map(function (w) { return { word: w, count: freq[w] }; })
+      .sort(function (a, b) { return b.count - a.count; })
+      .slice(0, 10);
+
+    var list = document.getElementById('word-list');
+    if (!top.length) { list.innerHTML = '<div class="empty-state">Not enough data yet.</div>'; return; }
+    var max = top[0].count;
+    list.innerHTML = top.map(function (item) {
+      var pct = Math.round((item.count / max) * 100);
+      return (
+        '<div class="word-row">' +
+          '<div class="word">' + esc(item.word) + '</div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<div class="count">' + item.count + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  // ---------- init ----------
+
+  renderNotesList();
+})();
+</script>
+</body>
+</html>
